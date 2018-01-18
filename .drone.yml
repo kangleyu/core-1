@@ -75,7 +75,7 @@ matrix:
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
-      INTEGRATION_SUITE: federeation_features
+      INTEGRATION_SUITE: federation_features
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
