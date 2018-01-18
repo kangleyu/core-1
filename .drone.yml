@@ -64,10 +64,7 @@ pipeline:
     group: test
     commands:
       - ./tests/drone/test-integration.sh ${INTEGRATION_SUITE}
-    when:
-      event: [push, pull_request]
-      matrix:
-        TEST_SUITE: integration
+
 
 matrix:
   include:
@@ -86,4 +83,4 @@ matrix:
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
-      INTEGRATION_SUITE: default_features
+      INTEGRATION_SUITE: features
