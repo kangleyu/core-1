@@ -74,16 +74,16 @@ matrix:
     # Integration
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
-      INTEGRATION_SUITE: capabilities
+      INTEGRATION_SUITE: capabilities_features
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
-      INTEGRATION_SUITE: federeation
+      INTEGRATION_SUITE: federeation_features
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
-      INTEGRATION_SUITE: sharees
+      INTEGRATION_SUITE: sharees_features
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
-      INTEGRATION_SUITE: default
+      INTEGRATION_SUITE: default_features
