@@ -116,6 +116,16 @@ class Group implements IGroup {
 	 * @return bool
 	 */
 	public function inGroup($user) {
+		// If users were retrieved already with getUsers, fetch from cache
+		if (!is_null($this->usersCache)) {
+			foreach($this->usersCache as $cachedUser) {
+				if ($cachedUser->getUID() === $user->getUID()) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		$account = $this->userManager->getAccountObject($user);
 		return $this->membershipManager->isGroupUserById($account->getId(), $this->backendGroup->getId());
 	}
@@ -239,6 +249,9 @@ class Group implements IGroup {
 
 		// Delete group internally
 		$this->groupMapper->delete($this->backendGroup);
+
+		// Clear cache for consistency
+		$this->usersCache = null;
 
 		// Emit post delete
 		$this->groupManager->emit('\OC\Group', 'postDelete', [$this]);

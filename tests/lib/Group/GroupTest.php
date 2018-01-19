@@ -112,6 +112,8 @@ class GroupTest extends \Test\TestCase {
 		$account2 = $this->createMock(Account::class);
 		$user2 = $this->createMock(User::class);
 		$user2->expects($this->any())->method('getUID')->willReturn('user2');
+		$user3 = $this->createMock(User::class);
+		$user3->expects($this->any())->method('getUID')->willReturn('user3');
 		$this->membershipManager->expects($this->once())
 			->method('getGroupUserAccountsById')
 			->with($backendGroupId)
@@ -134,6 +136,15 @@ class GroupTest extends \Test\TestCase {
 		// This call should fetch from cache
 		$users2 = $group->getUsers();
 		$this->assertEquals($users, $users2);
+
+		// Call inGroup should also be fetched from cache
+		$this->userManager->expects($this->never())
+			->method('getAccountObject');
+		$this->membershipManager->expects($this->never())
+			->method('isGroupUserById');
+		$this->assertTrue($group->inGroup($user1));
+		$this->assertTrue($group->inGroup($user2));
+		$this->assertFalse($group->inGroup($user3));
 	}
 
 	public function testInGroup() {

@@ -143,7 +143,7 @@ class ManagerTest extends \Test\TestCase {
 
 	public function setUp() {
 		parent::setUp();
-		$this->connection = $this->createMock(IDBConnection::class);;
+		$this->connection = $this->createMock(IDBConnection::class);
 		$this->membershipManager = $this->createMock(MembershipManager::class);
 		$this->userManager = $this->createMock(UserManager::class);
 		$this->groupMapper = $this->createMock(GroupMapper::class);

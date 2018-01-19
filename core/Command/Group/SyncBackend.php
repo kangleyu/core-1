@@ -36,7 +36,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class SyncBackend extends Command {
 
@@ -182,7 +181,7 @@ class SyncBackend extends Command {
 	 * @param SyncService $syncService
 	 */
 	private function handleUnknownGroups(OutputInterface $output, SyncService $syncService) {
-		$output->writeln("Scan existing groups and find unknown groups ...");
+		$output->writeln("Scan existing groups and find groups to delete...");
 		$p = new ProgressBar($output);
 		$toBeDeleted = $syncService->getNoLongerExistingGroup(function () use ($p) {
 			$p->advance();
@@ -192,7 +191,7 @@ class SyncBackend extends Command {
 		$output->writeln('');
 
 		if (empty($toBeDeleted)) {
-			$output->writeln("No unknown groups have been detected.");
+			$output->writeln("No groups to be deleted have been detected.");
 		} else {
 			$output->writeln("Proceeding to remove the backend groups. Following groups are no longer known with the connected backend.");
 			$output->writeln('');
@@ -236,48 +235,70 @@ class SyncBackend extends Command {
 	 */
 	private function handleMembershipsUpdate(OutputInterface $output, SyncService $syncService, $backendGroupsNo) {
 		// insert/update known users
-		$output->writeln("Fetch remote users for updated groups ...");
+		$output->writeln("Fetch remote users for fetched and synced groups ...");
 		$p = new ProgressBar($output);
 		$p->start($backendGroupsNo);
-		$gidUidsMap = $syncService->getRemoteGroupUsers(function () use ($p) {
+
+		// Fetch all groups and their corresponding users from remote backend e.g. LDAP
+		$remoteGidUidsMap = $syncService->getRemoteGroupUsers(function () use ($p) {
 			$p->advance();
 		});
+
 		$p->finish();
 		$output->writeln('');
 		$output->writeln('');
-		$output->writeln("Sync memberships for updated groups ...");
+		$output->writeln("Sync memberships for synced groups ...");
 		$p = new ProgressBar($output);
 		$p->start($backendGroupsNo);
 
-		foreach ($gidUidsMap as $gid => $remoteUserIds) {
-			$remoteBackendUserIdsMap = $this->getRemoteBackendUserIdsMap($remoteUserIds);
-			$localBackendUserIdsMap = $this->getLocalBackendUserIdsMap($remoteUserIds);
+		// For each remote group and corresponding users, sync with existing users and memberships
+		foreach ($remoteGidUidsMap as $gid => $remoteGroupUserIds) {
+			$group = $this->groupManager->get($gid);
+			// For all local synced users from several backends for specific group with group id $gid,
+			// map to backendclass -> userid map
+			$localBackendUserIdsMap = $this->getBackendToUidMapForExistingGroupUsers($group);
 
-			foreach ($remoteBackendUserIdsMap as $backendClass => $remoteUids) {
-				$group = $this->groupManager->get($gid);
-				if (array_key_exists($backendClass, $localBackendUserIdsMap)) {
-					// Users for both remote and local have the same backend, sync
-					$localUids = $localBackendUserIdsMap[$backendClass];
-					$membershipsToRemove = array_diff($localUids, $remoteUids);
-					$membershipsToAdd = array_diff($remoteUids, $localUids);
+			// For all remote backend users e.g. LDAP for specific group with group id $gid,
+			// check if they have synced account already, and map
+			// to backendclass -> userid map
+			$remoteBackendUserIdsMap = $this->getBackendToUidMapForRemoteUsers($remoteGroupUserIds);
 
-				} else {
-					// No users existing for this backend yet, add all as members
-					$membershipsToRemove = [];
-					$membershipsToAdd = $remoteUids;
+			// For each remote backend e.g. LDAP and existing users there for this group identified by gid
+			// sync with local group users
+			$membershipsToRemove = [];
+			$membershipsToAdd = [];
+			foreach ($this->userManager->getBackends() as $userBackend) {
+				$userBackendClass = get_class($userBackend);
+
+				$localUids = [];
+				if (array_key_exists($userBackendClass, $localBackendUserIdsMap)) {
+					$localUids = $localBackendUserIdsMap[$userBackendClass];
 				}
 
-				foreach ($membershipsToRemove as $uid) {
-					$user = $this->userManager->get($uid);
-					$group->removeUser($user);
+				$remoteUids = [];
+				if (array_key_exists($userBackendClass, $remoteBackendUserIdsMap)) {
+					$remoteUids = $remoteBackendUserIdsMap[$userBackendClass];
 				}
-				
-				foreach ($membershipsToAdd as $uid) {
-					$user = $this->userManager->get($uid);
-					$group->addUser($user);
+
+//				// Check which memberships need to removed and added for this backend class
+				$membershipCandidatesToRemove = array_diff($localUids, $remoteUids);
+				foreach ($membershipCandidatesToRemove as $uid) {
+
 				}
+				$membershipCandidatesToAdd = array_diff($remoteUids, $localUids);
+
+
 			}
 
+			foreach ($membershipsToRemove as $uid) {
+				$user = $this->userManager->get($uid);
+				$group->removeUser($user);
+			}
+
+			foreach ($membershipsToAdd as $uid) {
+				$user = $this->userManager->get($uid);
+				$group->addUser($user);
+			}
 		}
 
 		$p->finish();
@@ -286,12 +307,29 @@ class SyncBackend extends Command {
 	}
 
 	/**
-	 * Fetch remote backend users which have valid account synced
+	 * Map to backendclass -> userid map for
+	 * all local synced users from several backends for specific group,
+	 *
+	 * @param IGroup $group
+	 * @return array - backendclass (string) -> uids (string[]) map
+	 */
+	private function getBackendToUidMapForExistingGroupUsers($group){
+		$localBackendUserIdsMap = [];
+		foreach ($group->getUsers() as $localUser) {
+			$localBackendUserIdsMap[$localUser->getBackendClassName()][] = $localUser->getUID();
+		}
+
+		return $localBackendUserIdsMap;
+	}
+
+	/**
+	 * Map to backendclass -> userid map for
+	 * all remote backend users e.g. LDAP, check if they have synced account already
 	 *
 	 * @param string[] $remoteUserIds
 	 * @return array - backendclass (string) -> uids (string[]) map
 	 */
-	private function getRemoteBackendUserIdsMap($remoteUserIds){
+	private function getBackendToUidMapForRemoteUsers($remoteUserIds){
 		$remoteBackendUserIdsMap = [];
 		foreach ($remoteUserIds as $remoteUid) {
 			if ($this->userManager->userExists($remoteUid)) {
@@ -301,21 +339,5 @@ class SyncBackend extends Command {
 		}
 
 		return $remoteBackendUserIdsMap;
-	}
-
-	/**
-	 * Fetch local backend users which have valid account synced for group with id $gid
-	 *
-	 * @param string $gid
-	 * @return array - backendclass (string) -> uids (string[]) map
-	 */
-	private function getLocalBackendUserIdsMap($gid){
-		$group = $this->groupManager->get($gid);
-		$localBackendUserIdsMap = [];
-		foreach ($group->getUsers() as $localUser) {
-			$localBackendUserIdsMap[$localUser->getBackendClassName()][] = $localUser->getUID();
-		}
-
-		return $localBackendUserIdsMap;
 	}
 }

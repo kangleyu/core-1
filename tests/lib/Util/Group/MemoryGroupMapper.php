@@ -70,4 +70,15 @@ class MemoryGroupMapper extends GroupMapper {
 		return $match;
 	}
 
+	public function callForAllGroups($callback, $search) {
+		array_map(function (BackendGroup $a) use ($search, $callback) {
+			if (stripos($a->getGroupId(), $search) !== false || stripos($a->getDisplayName(), $search) !== false || $search == '') {
+				$callback($a);
+			}
+		}, self::$groups);
+	}
+
+	public function clear() {
+		self::$groups = [];
+	}
 }

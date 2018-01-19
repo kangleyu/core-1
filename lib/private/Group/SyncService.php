@@ -30,7 +30,8 @@ use OCP\ILogger;
 /**
  * Class SyncService
  *
- * TODO
+ * All groups in a group backend and their group members are synced into the backend group table
+ * and membership table.
  *
  * @package OC\Group
  */
