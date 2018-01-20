@@ -302,12 +302,6 @@ matrix:
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
-      INTEGRATION_SUITE: features
-      USE_SERVER: true
-      USE_FEDERATED_SERVER: true
-
-    - PHP_VERSION: 7.1
-      TEST_SUITE: integration
       INTEGRATION_SUITE: features/webdav
       USE_SERVER: true
       USE_FEDERATED_SERVER: true
@@ -318,6 +312,17 @@ matrix:
       USE_SERVER: true
       USE_FEDERATED_SERVER: true
 
+    - PHP_VERSION: 7.1
+      TEST_SUITE: integration
+      INTEGRATION_SUITE: features/other
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
+
+    - PHP_VERSION: 7.1
+      TEST_SUITE: integration
+      INTEGRATION_SUITE: features/sharing
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     # Code Coverage Computation
     - PHP_VERSION: 7.1
