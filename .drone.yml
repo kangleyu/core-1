@@ -110,6 +110,9 @@ pipeline:
   integration:
     image: owncloudci/php:${PHP_VERSION}
     pull: true
+    environment:
+      - TEST_SERVER_URL=http://server/ocs/
+      - TEST_SERVER_FED_URL=http://federated/ocs/
     commands:
       - ./tests/drone/test-integration.sh ${INTEGRATION_SUITE}
     when:
@@ -287,34 +290,50 @@ matrix:
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/capabilities
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/federation
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/sharees
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/webdav
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/trashbin
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/other
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/sharing
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features/provisioning
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
 
 
     # Code Coverage Computation
