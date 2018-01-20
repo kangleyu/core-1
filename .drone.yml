@@ -110,10 +110,6 @@ pipeline:
   integration:
     image: owncloudci/php:${PHP_VERSION}
     pull: true
-    group: test
-    environment:
-      - TEST_SERVER_URL=http://server/ocs/
-      - TEST_SERVER_FED_URL=http://federated/ocs/
     commands:
       - ./tests/drone/test-integration.sh ${INTEGRATION_SUITE}
     when:
