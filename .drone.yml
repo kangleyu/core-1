@@ -292,7 +292,6 @@ matrix:
       TEST_SUITE: integration
       INTEGRATION_SUITE: capabilities_features
       USE_SERVER: true
-      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
@@ -304,11 +303,22 @@ matrix:
       TEST_SUITE: integration
       INTEGRATION_SUITE: sharees_features
       USE_SERVER: true
-      USE_FEDERATED_SERVER: true
 
     - PHP_VERSION: 7.1
       TEST_SUITE: integration
       INTEGRATION_SUITE: features
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
+
+    - PHP_VERSION: 7.1
+      TEST_SUITE: integration
+      INTEGRATION_SUITE: features/webdav
+      USE_SERVER: true
+      USE_FEDERATED_SERVER: true
+
+    - PHP_VERSION: 7.1
+      TEST_SUITE: integration
+      INTEGRATION_SUITE: features/trashbin
       USE_SERVER: true
       USE_FEDERATED_SERVER: true
 
