@@ -1242,7 +1242,8 @@ $CONFIG = array(
 
 /**
  * If you are applying a theme to ownCloud, enter the name of the theme here.
- * The default location for themes is ``owncloud/themes/``.
+ * The default location for legacy themes is ``owncloud/themes/``.
+ * Since version 10.0, however, themes are apps and are stored in one of app directories.
  */
 'theme' => '',
 
